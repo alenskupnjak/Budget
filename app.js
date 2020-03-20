@@ -67,12 +67,22 @@ let UIController = (function(){
       return {
         type: document.querySelector(DOMstring.inputType).value, // odabir + ili -
         description: document.querySelector(DOMstring.inputDescription).value,
-        value: document.querySelector(DOMstring.inputValue).value
+        value: parseFloat(document.querySelector(DOMstring.inputValue).value)
       }
     },
     getDOMstrings: function(){
       return DOMstring;
     },
+    cleraFields: function(){
+      // vracanje na pocetnu vrijednost
+      let clear = document.querySelectorAll(DOMstring.inputDescription + ',' + DOMstring.inputValue)
+      console.log(clear)
+      // Ciscenje polja pocetnih vrijednosti
+      clear[0].value=""; clear[1].value=""
+      // fokusiranje na opisno polje
+      clear[0].focus();
+    },
+
     addlistItem:function(obj,type){
       let html, newHtml;
       // create HTML with placew hoker text
@@ -103,9 +113,9 @@ let controller = (function(budgetCtrl, UICtrl) {
 
   let setupEventLiseners = function() {
     let DOM = UICtrl.getDOMstrings();
-
+    // regiram na potvrdu unosa(kvacica)
     let a = document.querySelector(DOM.inputBtn).addEventListener('click', ctrlAddItem);
-
+    // regiram na enter (event.which je za starije browsere)
     document.addEventListener('keypress', function(event){
       if (event.keyCode === 13 || event.which === 13) {
        ctrlAddItem();
@@ -113,21 +123,33 @@ let controller = (function(budgetCtrl, UICtrl) {
     });
   };
 
+  let updateBudget = function() {
+
+    // 1. izračunaj budget
+
+    // 2. return the budget
+
+    // 3. Ispisati budget na UI 
+  }
+
 
   let ctrlAddItem = function() {
     let input, newItem;
 
     // 1. Očitaj uneseni podatak
     input = UICtrl.getinput();
+    if (input.description !== '' && !isNaN(input.value) && input.value > 0) {
+        // 2. dodaj vrijednost na budget conntroller
+        newItem = budgetCtrl.addItem(input.type, input.description, input.value);     console.log(newItem)
+  
+        // 3. dodaj vrijednost na UI
+        diplay = UICtrl.addlistItem(newItem,input.type)
+        UICtrl.cleraFields();
+  
+        // 4. Calculate an update the budget
+        updateBudget();
+    }
 
-    // 2. dodaj vrijednost na budget conntroller
-    newItem = budgetCtrl.addItem(input.type, input.description, input.value);     console.log(newItem)
-
-    // 3. dodaj vrijednost na UI
-    diplay = UICtrl.addlistItem(newItem,input.type)
-    
-    // 4. izračunaj budget
-    // 5. Ispisati budget na UI 
   }
 
   // veza sa vanjskim svijetom
