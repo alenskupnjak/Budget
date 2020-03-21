@@ -5,6 +5,19 @@ let budgetController = (function(){
     this.id= id;
     this.description = description;
     this.value = value;
+    this.percentage = -1;
+  }
+
+  Expense.prototype.calcPercentage = function(totalIncome) {
+    if (totalIncome > 0) {
+      this.percentage = Math.round((this.value / totalIncome)*100);
+    } else {
+      this.percentage = -1;
+    }
+  }
+
+  Expense.prototype.getPercentage = function(){
+    return this.percentage;
   }
 
   let Income = function(id, description, value) {
@@ -28,7 +41,7 @@ let budgetController = (function(){
 
   let calculateTotal = function(type){
     let sum= 0;
-    data.allItems[type].forEach( data=> {
+    data.allItems[type].forEach( data => {
       sum  += data.value;
     })
     // spremljeno kompletan
@@ -37,7 +50,7 @@ let budgetController = (function(){
 
   return {
 
-      deleteItem: function(type, id){
+    deleteItem: function(type, id){
         console.log( data.allItems[type])
 
         //  formiramo polje gdje su pospremljeni svi indexi
@@ -62,45 +75,60 @@ let budgetController = (function(){
         })
 
 
-      },
-
-      // veza sa vanjskim svijetom
-      addItem: function(type, des, val){
-      let newItem, ID;
-
-      // kreiram novi ID
-      // ID = data.allItems[type].length;
-         ID = Math.random()
-
-      // kreiram novi item ovisno dali je 'inc' ili 'exp' i pohranjujem u data
-      if (type === 'exp') {
-        newItem = new Expense(ID, des,val);
-        data.allItems.exp.push(newItem); console.log(data)
-
-      } else if (type === 'inc') {
-        newItem = new Income(ID, des, val);
-        data.allItems.inc.push(newItem); console.log(data)
-      }
-
-     // Vracam vrijednost podatka
-      return newItem;
     },
 
-    // izračuni
-    calculateBudget: function(){
-      // calculate total income and expenses
-       calculateTotal('exp');
-       calculateTotal('inc');
-    
-      // Calculate the budget: income - expenses
-      data.budget = data.totals.inc - data.totals.exp ;
+    // veza sa vanjskim svijetom
+    addItem: function(type, des, val){
+          let newItem, ID;
 
-      // calculate perventage
-      if (data.totals.inc > 0) {
-        data.percentage =  Math.round(data.totals.exp / data.totals.inc *100) ;
-      } else {
-        data.percentage = 0 ;
-      }
+          // kreiram novi ID
+          // ID = data.allItems[type].length;
+          ID = Math.random()
+
+          // kreiram novi item ovisno dali je 'inc' ili 'exp' i pohranjujem u data
+        if (type === 'exp') {
+          newItem = new Expense(ID, des,val);
+          data.allItems.exp.push(newItem); console.log(data)
+
+        } else if (type === 'inc') {
+          newItem = new Income(ID, des, val);
+          data.allItems.inc.push(newItem); console.log(data)
+        }
+
+      // Vracam vrijednost podatka
+        return newItem;
+    },
+
+    // izračuni z BUDGET
+    calculateBudget: function(){
+        // calculate total income and expenses
+        calculateTotal('exp');
+        calculateTotal('inc');
+    
+        // Calculate the budget: income - expenses
+        data.budget = data.totals.inc - data.totals.exp ;
+
+        // calculate perventage
+        if (data.totals.inc > 0) {
+          data.percentage =  Math.round(data.totals.exp / data.totals.inc *100) ;
+        } else {
+          data.percentage = 0 ;
+        }
+    },
+
+    // Izračun postotka svake stavke EXP pojedinačno
+    calculatePrecentages: function(){
+        data.allItems.exp.forEach(e =>{
+          e.calcPercentage(data.totals.inc);
+        })
+    },
+
+    // prolazim kroz polje EXp i za svaki pojedinacno ocitavam vrijednost te ju stavljam u polje
+    getPercentage: function() {
+      var allPerc = data.allItems.exp.map(e =>{
+        return e.getPercentage();
+      })
+      return allPerc
     },
 
     // nakon rekalkulacije, vračamo izračunate vrijednosti
@@ -243,15 +271,13 @@ let controller = (function(budgetCtrl, UICtrl) {
       let budget = budgetCtrl.getBudget();
       UICtrl.displayBudget(budget);
   
-      // 4. Calculate and update percentages
+      // 4. Calculate and update percentage
+      updatePercentage();
     }
-
-
-
-
-
   }
   
+
+
   //joijoi
   let updateBudget = function() {
     // 1. izračunaj budget
@@ -264,7 +290,21 @@ let controller = (function(budgetCtrl, UICtrl) {
     UICtrl.displayBudget(budget);
   }
 
+  // updatira percentage nakon dodavanja ili brisanja itema
+  let updatePercentage = function(){
+    
+    // 1 calculate percentages
+     budgetCtrl.calculatePrecentages();
 
+    //2. read from the budget controler
+    let percentage = budgetCtrl.getPercentage();
+    console.log(percentage)
+
+    //3 Update the UI
+  };
+
+
+  // dodavanje nove stavke EXP ili INC
   let ctrlAddItem = function() {
     let input, newItem;
 
@@ -280,8 +320,10 @@ let controller = (function(budgetCtrl, UICtrl) {
   
         // 4. Calculate an update the budget
         updateBudget();
-    }
 
+        // 5. Calculate and update percentage
+        updatePercentage();
+    }
   }
 
 
@@ -299,7 +341,6 @@ let controller = (function(budgetCtrl, UICtrl) {
 
     }
   };
-
 })(budgetController, UIController);
 
 
