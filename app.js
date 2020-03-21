@@ -36,21 +36,50 @@ let budgetController = (function(){
   }
 
   return {
+
+      deleteItem: function(type, id){
+        console.log( data.allItems[type])
+
+        //  formiramo polje gdje su pospremljeni svi indexi
+        ids = data.allItems[type].map(data=> {
+          return data.id.toString();
+        })
+        console.log(ids)
+        console.log(id)
+        
+        // pronalazimo koji je index koji nam omogucije da ga obrisemo
+        index = ids.indexOf(id)
+        
+        console.log('index= ' + index)
+
+        // indexOf vraca vrijednost -1 ako ne pronade vrijednost u polju
+          if (index !== -1) {
+            data.allItems[type].splice(index,1);
+          }
+
+        data.allItems[type].forEach(data =>{
+          console.log(data);
+        })
+
+
+      },
+
       // veza sa vanjskim svijetom
       addItem: function(type, des, val){
       let newItem, ID;
 
       // kreiram novi ID
-      ID = data.allItems[type].length;
+      // ID = data.allItems[type].length;
+         ID = Math.random()
 
       // kreiram novi item ovisno dali je 'inc' ili 'exp' i pohranjujem u data
       if (type === 'exp') {
-      newItem = new Expense(ID, des,val);
-      data.allItems.exp.push(newItem); console.log(data)
+        newItem = new Expense(ID, des,val);
+        data.allItems.exp.push(newItem); console.log(data)
 
       } else if (type === 'inc') {
-      newItem = new Income(ID, des, val);
-      data.allItems.inc.push(newItem); console.log(data)
+        newItem = new Income(ID, des, val);
+        data.allItems.inc.push(newItem); console.log(data)
       }
 
      // Vracam vrijednost podatka
@@ -103,7 +132,8 @@ let UIController = (function(){
     budgetLabel: '.budget__value',
     incomeLabel: '.budget__income--value',
     expenseLabel: '.budget__expenses--value',
-    parcentageLabel: '.budget__expenses--percentage'
+    parcentageLabel: '.budget__expenses--percentage',
+    container: '.container'
 
   }
 
@@ -136,12 +166,13 @@ let UIController = (function(){
     },
 
     // setiranje vrijednosti sučelja
-    cleraFields: function(){
+    clearFields: function(){
       // vracanje na pocetnu vrijednost
       let clear = document.querySelectorAll(DOMstring.inputDescription + ',' + DOMstring.inputValue)
-      console.log(clear)
+
       // Ciscenje polja pocetnih vrijednosti
-      clear[0].value=""; clear[1].value=""
+      // clear[0].value=""; clear[1].value=""
+
       // fokusiranje na opisno polje
       clear[0].focus();
     },
@@ -152,10 +183,10 @@ let UIController = (function(){
       // create HTML with placew hoker text
       if ( type === 'inc') {
         element = DOMstring.incomeContainer;
-        html = '<div class="item clearfix" id="income-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>'
+        html = '<div class="item clearfix" id="inc-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>'
       } else if (type === 'exp') {
         element = DOMstring.expensContainer;
-        html = '<div class="item clearfix" id="expense-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>'
+        html = '<div class="item clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>'
       }
 
       // Replace the place holder text
@@ -164,7 +195,6 @@ let UIController = (function(){
       newHtml = newHtml.replace('%value%', obj.value);
 
       // insert the HTML into the doom
-        let set = document.querySelector('.income__list');
         document.querySelector(element).insertAdjacentHTML('beforeend',newHtml);
     }
   }
@@ -181,14 +211,48 @@ let controller = (function(budgetCtrl, UICtrl) {
 
     // regiram na potvrdu unosa(kvacica)
     let a = document.querySelector(DOM.inputBtn).addEventListener('click', ctrlAddItem);
+
     // regiram na enter (event.which je za starije browsere)
     document.addEventListener('keypress', function(event){
       if (event.keyCode === 13 || event.which === 13) {
        ctrlAddItem();
       }
     });
+
+    // postavljenje event lisenera za brisanje itema income i expense
+    document.querySelector(DOM.container).addEventListener('click', ctrlDeleteItem);
+
   };
 
+  // brisanje utem-a sa liste 
+  let ctrlDeleteItem = function(event){
+    itemID = event.target.parentNode.parentNode.parentNode.parentNode.id;
+    if (itemID) {
+      splitId = itemID.split('-');
+      type = splitId[0];    console.log(type)
+      ID = splitId[1];     console.log(ID)
+  
+      // 1. delete the item from the data structure
+      budgetCtrl.deleteItem(type,ID);
+  
+      // 2. Delete the item from the UI
+      document.getElementById(itemID).remove();
+
+      // 3. Update and show the new budget
+      budgetCtrl.calculateBudget();
+      let budget = budgetCtrl.getBudget();
+      UICtrl.displayBudget(budget);
+  
+      // 4. Calculate and update percentages
+    }
+
+
+
+
+
+  }
+  
+  //joijoi
   let updateBudget = function() {
     // 1. izračunaj budget
     budgetCtrl.calculateBudget();
@@ -212,7 +276,7 @@ let controller = (function(budgetCtrl, UICtrl) {
   
         // 3. dodaj vrijednost na UI
         diplay = UICtrl.addlistItem(newItem,input.type)
-        UICtrl.cleraFields();
+        UICtrl.clearFields();
   
         // 4. Calculate an update the budget
         updateBudget();
