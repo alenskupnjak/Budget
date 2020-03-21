@@ -14,39 +14,83 @@ let budgetController = (function(){
   }
 
   // definicija strukture mojih podataka
-  data = { allItems:{ exp:[] ,  inc:[] },  totals:{ exp:0 , inc:0}};
+  data = { 
+    allItems:{
+       exp:[] ,  
+       inc:[] 
+      },  
+       totals:{ 
+         exp:0 , 
+         inc:0
+      }, 
+      budget:0,
+      percentage:0};
 
-// veza sa vanjskim svijetom
-return {
-  addItem: function(type, des, val){
-    let newItem, ID;
+  let calculateTotal = function(type){
+    let sum= 0;
+    data.allItems[type].forEach( data=> {
+      sum  += data.value;
+    })
+    // spremljeno kompletan
+    data.totals[type]= sum;
+  }
 
-    // kreiram novi ID
-    ID = data.allItems[type].length;
+  return {
+      // veza sa vanjskim svijetom
+      addItem: function(type, des, val){
+      let newItem, ID;
 
-    // kreiram novi item ovisno dali je 'inc' ili 'exp' i pohranjujem u data
-    if (type === 'exp') {
+      // kreiram novi ID
+      ID = data.allItems[type].length;
+
+      // kreiram novi item ovisno dali je 'inc' ili 'exp' i pohranjujem u data
+      if (type === 'exp') {
       newItem = new Expense(ID, des,val);
       data.allItems.exp.push(newItem); console.log(data)
 
-    } else if (type === 'inc') {
+      } else if (type === 'inc') {
       newItem = new Income(ID, des, val);
       data.allItems.inc.push(newItem); console.log(data)
+      }
+
+     // Vracam vrijednost podatka
+      return newItem;
+    },
+
+    // izračuni
+    calculateBudget: function(){
+      // calculate total income and expenses
+       calculateTotal('exp');
+       calculateTotal('inc');
+    
+      // Calculate the budget: income - expenses
+      data.budget = data.totals.inc - data.totals.exp ;
+
+      // calculate perventage
+      if (data.totals.inc > 0) {
+        data.percentage =  Math.round(data.totals.exp / data.totals.inc *100) ;
+      } else {
+        data.percentage = 0 ;
+      }
+    },
+
+    // nakon rekalkulacije, vračamo izračunate vrijednosti
+    getBudget: function() {
+      return  {
+        budget: data.budget,
+        totalInc: data.totals.inc,
+        totalExp: data.totals.exp,
+        percentage: data.percentage
+      }
     }
-
-    // Vracam vrijednost podatka
-    return newItem;
   }
-
-}
-
 })();
 
 
 
 
 
-// UI CONTROLER
+// UI CONTROLER **********************************************************
 let UIController = (function(){
 
   let DOMstring = {
@@ -55,14 +99,19 @@ let UIController = (function(){
     inputValue: '.add__value',
     inputBtn: '.add__btn',
     incomeContainer: '.income__list',
-    expensContainer:'.expenses__list'
+    expensContainer:'.expenses__list',
+    budgetLabel: '.budget__value',
+    incomeLabel: '.budget__income--value',
+    expenseLabel: '.budget__expenses--value',
+    parcentageLabel: '.budget__expenses--percentage'
 
   }
 
 
 
-  // veza sa vanjskim svijetom, tu se sve funkcije
+ 
   return {
+    // očitavanje vrijednosti funkcije
     getinput: function(){
       return {
         type: document.querySelector(DOMstring.inputType).value, // odabir + ili -
@@ -73,6 +122,20 @@ let UIController = (function(){
     getDOMstrings: function(){
       return DOMstring;
     },
+
+    // ispisivanje vrijednost budgeta na ekran
+    displayBudget(obj){
+      document.querySelector(DOMstring.budgetLabel).textContent= obj.budget;
+      document.querySelector(DOMstring.incomeLabel).textContent= obj.totalInc;
+      document.querySelector(DOMstring.expenseLabel).textContent= obj.totalExp;
+      if (obj.percentage > 0){
+        document.querySelector(DOMstring.parcentageLabel).textContent= obj.percentage +'%';
+      } else {
+        document.querySelector(DOMstring.parcentageLabel).textContent='--';
+      }
+    },
+
+    // setiranje vrijednosti sučelja
     cleraFields: function(){
       // vracanje na pocetnu vrijednost
       let clear = document.querySelectorAll(DOMstring.inputDescription + ',' + DOMstring.inputValue)
@@ -83,6 +146,7 @@ let UIController = (function(){
       clear[0].focus();
     },
 
+    // kreiramo novi trošak na sučelje ekrana
     addlistItem:function(obj,type){
       let html, newHtml;
       // create HTML with placew hoker text
@@ -112,7 +176,9 @@ let UIController = (function(){
 let controller = (function(budgetCtrl, UICtrl) {
 
   let setupEventLiseners = function() {
+    // očitavanje vrijednosti
     let DOM = UICtrl.getDOMstrings();
+
     // regiram na potvrdu unosa(kvacica)
     let a = document.querySelector(DOM.inputBtn).addEventListener('click', ctrlAddItem);
     // regiram na enter (event.which je za starije browsere)
@@ -124,12 +190,14 @@ let controller = (function(budgetCtrl, UICtrl) {
   };
 
   let updateBudget = function() {
-
     // 1. izračunaj budget
-
+    budgetCtrl.calculateBudget();
+  
     // 2. return the budget
+    let budget = budgetCtrl.getBudget();
 
     // 3. Ispisati budget na UI 
+    UICtrl.displayBudget(budget);
   }
 
 
@@ -152,12 +220,18 @@ let controller = (function(budgetCtrl, UICtrl) {
 
   }
 
-  // veza sa vanjskim svijetom
+
   return {
     init: function() {
-      console.log('Aplikacija je startala!')
+      console.log('Aplikacija je startala!');
+      // setiranje ulaznih podataka na 0
+      UICtrl.displayBudget({
+        budget: 0,
+        totalInc: 0,
+        totalExp: 0,
+        percentage: 0
+      });
       setupEventLiseners();
-
 
     }
   };
@@ -165,5 +239,5 @@ let controller = (function(budgetCtrl, UICtrl) {
 })(budgetController, UIController);
 
 
-// ovdje pokrecemo program
+// pokrecemo program
 controller.init();
