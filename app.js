@@ -155,7 +155,8 @@ let UIController = (function() {
     expenseLabel: '.budget__expenses--value',
     parcentageLabel: '.budget__expenses--percentage',
     container: '.container',
-    expensesPercLabel: '.item__percentage'
+    expensesPercLabel: '.item__percentage',
+    dateLabel: '.budget__title--month'
   };
 
   // funkcija formatiranja  brojeva
@@ -196,6 +197,20 @@ let UIController = (function() {
       };
     },
 
+    
+    displayMonth: function(){
+      let now, year, months
+      now = new Date();
+      year = now.getFullYear();
+      months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      month = now.getMonth();
+
+      document.querySelector(DOMstring.dateLabel).textContent = months[month] + '/' +year;
+
+
+
+    },
+
     getDOMstrings: function() {
       return DOMstring;
     },
@@ -204,6 +219,7 @@ let UIController = (function() {
     displayBudget: function(obj) {
       let type;
       obj.budget > 0 ? (type = 'inc') : (type = 'exp');
+      
       document.querySelector(DOMstring.budgetLabel).textContent = formatNumber( obj.budget,type);
       document.querySelector(DOMstring.incomeLabel).textContent = formatNumber(obj.totalInc, 'inc');
       document.querySelector(DOMstring.expenseLabel).textContent = formatNumber(obj.totalExp, 'exp');
@@ -361,6 +377,7 @@ let controller = (function(budgetCtrl, UICtrl) {
   return {
     init: function() {
       console.log('Aplikacija je startala!');
+      UICtrl.displayMonth();
       // setiranje ulaznih podataka na 0
       UICtrl.displayBudget({
         budget: 0,
