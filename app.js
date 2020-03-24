@@ -268,8 +268,6 @@ let UIController = (function() {
         DOMstring.inputDescription + ',' + DOMstring.inputValue
       );
 
-      // Ciscenje polja pocetnih vrijednosti
-      // clear[0].value=""; clear[1].value=""
 
       // fokusiranje na opisno polje
       clear[0].focus();
