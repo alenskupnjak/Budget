@@ -15,13 +15,19 @@
 }
 
 body {
-    color: #555;
+    /* color: #555; */
     font-family: Open Sans;
     font-size: 16px;
     position: relative;
     height: 100vh;
     font-weight: 400;
 }
+
+.ion-icon {
+    font-size: 8px;
+    --ionicon-stroke-width: 8px;
+    color: blue;
+  }
 
 .right { float: right; }
 .red { color: #FF5049 !important; }
@@ -156,7 +162,7 @@ body {
     font-size: 35px;
     background: none;
     border: none;
-    color: #28B9B5;
+    /* color: #28B9B5; */
     cursor: pointer;
     display: inline-block;
     vertical-align: middle;
