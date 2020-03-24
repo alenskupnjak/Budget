@@ -86,11 +86,9 @@ let budgetController = (function() {
       if (type === 'exp') {
         newItem = new Expense(ID, des, val);
         data.allItems.exp.push(newItem);
-        console.log(data);
       } else if (type === 'inc') {
         newItem = new Income(ID, des, val);
         data.allItems.inc.push(newItem);
-        console.log(data);
       }
 
       // Vracam vrijednost podatka
@@ -182,9 +180,7 @@ let UIController = (function() {
     }
 
     type === 'inc' ? predznak = '+' : predznak = '-';
-
     return predznak + int + '.' + dec;
-
   };
 
   return {
@@ -197,7 +193,34 @@ let UIController = (function() {
       };
     },
 
-    
+    changeType: function(event){
+     let fields = document.querySelectorAll(
+       DOMstring.inputType + ',' +
+       DOMstring.inputDescription + ',' +
+       DOMstring.inputValue 
+     )
+
+    //  // rijesenje bez calback funkcije
+    //    fields[0].classList.toggle('red-focus');
+    //    fields[1].classList.toggle('red-focus');
+    //    fields[2].classList.toggle('red-focus');
+
+    // rijesenje callback
+    var callbackFun = function(list, callback) {
+      for (var i = 0; i < list.length; i++) {
+          callback(list[i]);
+      }
+    };
+
+    callbackFun(fields, function(cur) {
+       cur.classList.toggle('red-focus'); 
+    });
+
+    document.querySelector(DOMstring.inputBtn).classList.toggle('red')
+    },
+
+
+
     displayMonth: function(){
       let now, year, months
       now = new Date();
@@ -206,14 +229,13 @@ let UIController = (function() {
       month = now.getMonth();
 
       document.querySelector(DOMstring.dateLabel).textContent = months[month] + '/' +year;
-
-
-
     },
+
 
     getDOMstrings: function() {
       return DOMstring;
     },
+
 
     // ispisivanje vrijednost budgeta na ekran
     displayBudget: function(obj) {
@@ -296,6 +318,8 @@ let controller = (function(budgetCtrl, UICtrl) {
       }
     });
 
+    document.querySelector(DOM.inputType).addEventListener('change', UICtrl.changeType)
+
     // postavljenje event lisenera za brisanje itema income i expense
     document
       .querySelector(DOM.container)
@@ -345,7 +369,6 @@ let controller = (function(budgetCtrl, UICtrl) {
 
     //2. read from the budget controler
     let percentage = budgetCtrl.getPercentage();
-    console.log(percentage);
 
     //3 Update the UI
     UICtrl.displayPercentages(percentage);
@@ -360,7 +383,6 @@ let controller = (function(budgetCtrl, UICtrl) {
     if (input.description !== '' && !isNaN(input.value) && input.value > 0) {
       // 2. dodaj vrijednost na budget conntroller
       newItem = budgetCtrl.addItem(input.type, input.description, input.value);
-      console.log(newItem);
 
       // 3. dodaj vrijednost na UI
       diplay = UICtrl.addlistItem(newItem, input.type);
@@ -376,7 +398,6 @@ let controller = (function(budgetCtrl, UICtrl) {
 
   return {
     init: function() {
-      console.log('Aplikacija je startala!');
       UICtrl.displayMonth();
       // setiranje ulaznih podataka na 0
       UICtrl.displayBudget({
